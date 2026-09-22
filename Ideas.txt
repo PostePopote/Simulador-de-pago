@@ -1,0 +1,71 @@
+1. Una tienda de musica (ropa con estampado, vinilos, discos) 
+donde debe haber usuarios donde podran ver unicamente
+lo que tienen en el carrito y los podructos. Pero tambien habra un rol de admin
+el cual se encargara de agregar, modificar o eliminar productos junto.
+
+2. Una tienda de productos japoneses (bebidas,snacks,mangas,figuras)
+donde debe haber usuarios donde podran ver unicamente
+lo que tienen en el carrito y los podructos. Pero tambien habra un rol de admin
+el cual se encargara de agregar, modificar o eliminar productos junto.
+
+3. Combinar las dos ideas en una y tener un apartado de productos japoneses con filtro
+buscador y otro donde hay todo enfocado en la musica.
+
+opcion elegida: la numero 3
+
+
+Croquis de la base de datos
+usuarios
+├── id_usuario PK
+├── nombre
+├── gmail
+├── contraseña
+└── rol          (ENUM: 'cliente', 'admin')
+
+productos
+├── id_producto PK
+├── nombre
+├── precio
+├── stock
+├── tipo         (ENUM: 'musica', 'japones')   -- para separar los apartados
+└── categoria    (ej: 'vinilo', 'remera', 'snack', 'manga', 'figura')  -- para el filtro/buscador
+
+carrito
+├── id_carrito PK
+└── id_usuario FK
+
+carrito_detalle
+├── id_carrito_detalle PK
+├── id_carrito FK
+├── id_producto FK
+└── cantidad
+
+pedidos
+├── id_pedido PK
+├── id_usuario FK
+├── fecha
+├── estado       (ej: 'pendiente', 'confirmado')
+└── total
+
+pedido_detalle
+├── id_pedido_detalle PK
+├── id_pedido FK
+├── id_producto FK
+├── cantidad
+└── precio_unitario   -- guarda el precio al momento de la compra
+
+pagos
+├── id_pago PK
+├── id_pedido FK
+├── id_pago_mp        -- el ID que devuelve Mercado Pago (payment_id)
+├── metodo_pago       -- ej: 'tarjeta', 'billetera', 'efectivo'
+├── estado            -- ej: 'approved', 'pending', 'rejected' (lo manda MP)
+├── monto
+└── fecha_pago
+
+
+Estetica: Como sera la estetica de la pagina? Me enfocare mayormente en figuras emblematicas
+de la cultura japonesa, tomando en base el sakura que es el cerezo japones. un arbol que tiene flores
+rosas. Pero tambien tomare en cuenta el monte fuji, el torii (las puertas rojas de santuario) y
+el kintsugi que es el arte de reparar ceramica con oro, no oculta las grietas, las convierte en
+ parte de la historia de la pieza.

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block titulo %}Inicio - SakuraShop{% endblock %}
+
+{% block contenido %}
+    <h2>Bienvenido a SakuraShop</h2>
+    <p>Musica de todo tipo junto a diversos productos de Japon en un solo lugar.</p>
+    <a href="{{ url_for('productos') }}">Ver productos</a>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block titulo %}Productos - SakuraShop{% endblock %}
+
+{% block contenido %}
+    <h2>Productos</h2>
+
+    {# Si la lista viene vacia muestro un aviso #}
+    {% if productos %}
+        <div class="lista-productos">
+            {% for p in productos %}
+                <div class="producto">
+                    <img src="{{ url_for('static', filename=p.imagen) }}" alt="{{ p.nombre }}">
+                    <h3>{{ p.nombre }}</h3>
+                    <p>{{ p.categoria }}</p>
+                    <p>${{ p.precio }}</p>
+
+                    {# Todos pueden agregar al carrito #}
+                    <form method="POST" action="{{ url_for('agregar_al_carrito', id_producto=p.id) }}">
+                        <button type="submit">Agregar al carrito</button>
+                    </form>
+
+                    {# Solo el admin ve editar #}
+                    {% if session.get('rol') == 'admin' %}
+                        <a href="{{ url_for('editar', id_producto=p.id) }}">Editar</a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No hay productos para mostrar.</p>
+    {% endif %}
+{% endblock %}

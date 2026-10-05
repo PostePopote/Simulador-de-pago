@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block titulo %}Carrito - SakuraShop{% endblock %}
+
+{% block contenido %}
+    <h2>Mi carrito</h2>
+
+    {% if carrito %}
+        <div class="lista-productos">
+            {% for item in carrito %}
+                <div class="producto">
+                    <img src="{{ url_for('static', filename=item.imagen) }}" alt="{{ item.nombre }}">
+                    <h3>{{ item.nombre }}</h3>
+                    <p>{{ item.categoria }}</p>
+                    <p>${{ item.precio }} x {{ item.cantidad }}</p>
+
+                    <form method="POST" action="{{ url_for('quitar_del_carrito', id_producto=item.id) }}">
+                        <button type="submit">Quitar</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+
+        <h3>Total: ${{ total }}</h3>
+
+        <form method="POST" action="{{ url_for('pagar') }}">
+            <button type="submit">Finalizar compra</button>
+        </form>
+    {% else %}
+        <p>Tu carrito esta vacio.</p>
+        <a class="boton" href="{{ url_for('productos') }}">Ver productos</a>
+    {% endif %}
+{% endblock %}

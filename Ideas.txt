@@ -15,57 +15,74 @@ opcion elegida: la numero 3
 
 
 Croquis de la base de datos
-usuarios
+USUARIOS
 ├── id_usuario PK
 ├── nombre
 ├── gmail
 ├── contraseña
-└── rol          (ENUM: 'cliente', 'admin')
+└── rol
+     └── ENUM: 'cliente', 'admin'
 
-productos
+
+PRODUCTOS
 ├── id_producto PK
 ├── nombre
 ├── precio
 ├── stock
-├── tipo         (ENUM: 'musica', 'japones')   -- para separar los apartados
-└── categoria    (ej: 'vinilo', 'remera', 'snack', 'manga', 'figura')  -- para el filtro/buscador
+├── tipo
+│    └── ENUM: 'musica', 'japones'
+└── categoria
+     └── Ej: 'vinilo', 'remera', 'snack', 'manga', 'figura'
 
-carrito
+
+CARRITO
 ├── id_carrito PK
-└── id_usuario FK
+└── id_usuario FK → USUARIOS.id_usuario
 
-carrito_detalle
+
+CARRITO_DETALLE
 ├── id_carrito_detalle PK
-├── id_carrito FK
-├── id_producto FK
+├── id_carrito FK → CARRITO.id_carrito
+├── id_producto FK → PRODUCTOS.id_producto
 └── cantidad
 
-pedidos
+
+PEDIDOS
 ├── id_pedido PK
-├── id_usuario FK
+├── id_usuario FK → USUARIOS.id_usuario
 ├── fecha
-├── estado       (ej: 'pendiente', 'confirmado')
+├── estado
+│    └── Ej: 'pendiente', 'confirmado', 'cancelado'
 └── total
 
-pedido_detalle
-├── id_pedido_detalle PK
-├── id_pedido FK
-├── id_producto FK
-├── cantidad
-└── precio_unitario   -- guarda el precio al momento de la compra
 
-pagos
+PEDIDO_DETALLE
+├── id_pedido_detalle PK
+├── id_pedido FK → PEDIDOS.id_pedido
+├── id_producto FK → PRODUCTOS.id_producto
+├── cantidad
+└── precio_unitario
+
+
+PAGOS
 ├── id_pago PK
-├── id_pedido FK
-├── id_pago_mp        -- el ID que devuelve Mercado Pago (payment_id)
-├── metodo_pago       -- ej: 'tarjeta', 'billetera', 'efectivo'
-├── estado            -- ej: 'approved', 'pending', 'rejected' (lo manda MP)
+├── id_pedido FK → PEDIDOS.id_pedido
+├── id_pago_mp
+├── metodo_pago
+│    └── Ej: 'tarjeta', 'billetera', 'efectivo'
+├── estado
+│    └── Ej: 'approved', 'pending', 'rejected'
 ├── monto
 └── fecha_pago
 
 
 Estetica: Como sera la estetica de la pagina? Me enfocare mayormente en figuras emblematicas
-de la cultura japonesa, tomando en base el sakura que es el cerezo japones. un arbol que tiene flores
+de la cultura japonesa, tomando en base el sakura que es el cerezo japones, un arbol que tiene flores
 rosas. Pero tambien tomare en cuenta el monte fuji, el torii (las puertas rojas de santuario) y
 el kintsugi que es el arte de reparar ceramica con oro, no oculta las grietas, las convierte en
- parte de la historia de la pieza.
+parte de la historia de la pieza.
+
+
+administrar usuarios:
+hacer un "super admin" el cual tendra acceso a una tabla con todos los usuarios
+y podra ascenderlos o descenderlos como admins de forma manual

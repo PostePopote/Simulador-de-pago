@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!--Esto se encargara de ajustar toda la interfaz dependiendo de la pantalla del dispositivo-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- El titulo cambiara dependiendo de lo que vaya a heredar -->
+    <title>{% block titulo %}SakuraShop{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Cada pagina solo se le agrega css en el css -->
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <header>
+    <h1>
+        <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="SakuraShop" height="50">
+        SakuraShop
+    </h1>
+        <nav>
+            <a href="{{ url_for('home') }}">Inicio</a>
+            <a href="{{ url_for('productos') }}">Productos</a>
+            <a href="{{ url_for('carrito') }}">Carrito</a>
+
+            {# session viene de Flask, se puede usar directo en el template #}
+            {% if session.get('usuario') %}
+                <span>Hola, {{ session['usuario'] }}</span>
+
+                {# Unicamente los encargados de la pagina (admins) veran todo este tema #}
+                {% if session.get('rol') == 'admin' %}
+                    <a href="#">Panel admin</a>
+                {% endif %}
+
+                {% if session.get('rol') == 'admin' %}
+                    <a href="{{ url_for('agregar') }}">Agregar producto</a>
+                {% endif %}
+
+                <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Iniciar sesion</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <!-- Mensaje flash, va a decir algo como contraseña incorrecta -->
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+            <div class="mensajes">
+                {% for categoria, texto in mensajes %}
+                    <p class="mensaje {{ categoria }}">{{ texto }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        <!-- Aca va el contenido propio de cada pagina -->
+        {% block contenido %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>SakuraShop - Un lugar donde la musica variada con articulos japoneses conviven</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

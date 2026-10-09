@@ -23,23 +23,20 @@
             <a href="{{ url_for('home') }}">Inicio</a>
             <a href="{{ url_for('productos') }}">Productos</a>
             <a href="{{ url_for('carrito') }}">Carrito</a>
-
             {# session viene de Flask, se puede usar directo en el template #}
             {% if session.get('usuario') %}
                 <span>Hola, {{ session['usuario'] }}</span>
-
                 {# Unicamente los encargados de la pagina (admins) veran todo este tema #}
                 {% if session.get('rol') == 'admin' %}
                     <a href="#">Panel admin</a>
                 {% endif %}
-
                 {% if session.get('rol') == 'admin' %}
                     <a href="{{ url_for('agregar') }}">Agregar producto</a>
                 {% endif %}
-
                 <a href="{{ url_for('logout') }}">Cerrar sesion</a>
             {% else %}
                 <a href="{{ url_for('login') }}">Iniciar sesion</a>
+                <a href="{{ url_for('register') }}">Crear cuenta</a>
             {% endif %}
         </nav>
     </header>
@@ -61,7 +58,7 @@
     </main>
 
     <footer>
-        <p>SakuraShop - Un lugar donde la musica variada con articulos japoneses conviven</p>
+        <p>SakuraShop - Un lugar donde la musica variada con articulos japoneses y más conviven</p>
     </footer>
 
     {% block scripts %}{% endblock %}

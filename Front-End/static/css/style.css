@@ -174,12 +174,37 @@ form input:focus {
     box-shadow: 0 0 0 3px var(--rosa-sakura);
 }
 
+form select,
+form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+form select:focus,
+form textarea:focus {
+    outline: none;
+    border-color: var(--rojo-torii);
+    box-shadow: 0 0 0 3px var(--rosa-sakura);
+}
+
+form textarea {
+    resize: vertical;
+}
+
 /* Lista de productos en cuadricula */
 .lista-productos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 25px;
     margin-top: 20px;
+
+    /* Hace que todas las tarjetas de una misma fila tengan la misma altura */
+    align-items: stretch;
 }
 
 /* Tarjeta de cada producto */
@@ -190,6 +215,17 @@ form input:focus {
     padding: 15px;
     text-align: center;
     transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+
+    /* Flexbox en columna: asi puedo empujar el boton al fondo sin importar cuanto texto haya arriba */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Al pasar el mouse, la tarjeta sube y el borde se vuelve dorado */
+.producto:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    border-color: var(--dorado);
 }
 
 .producto img {
@@ -203,10 +239,13 @@ form input:focus {
 .producto h3 {
     margin: 12px 0 5px;
     color: var(--azul-fuji);
+    /* Si el nombre es muy largo, lo corto en altura en vez de dejar que estire la tarjeta */
+    max-height: 3em;
+    overflow: hidden;
 }
 
-/* Categoria */
-.producto p:nth-of-type(1) {
+/* Categoria, cambiado a algo mas normal y simple que la version anterior */
+.producto .categoria {
     margin: 0;
     font-size: 0.85rem;
     color: #888;
@@ -214,11 +253,27 @@ form input:focus {
     letter-spacing: 1px;
 }
 
-/* Precio */
-.producto p:nth-of-type(2) {
+/* Precio, cambiado a algo mas normal y simple que la version*/
+.producto .precio {
     font-size: 1.2rem;
     font-weight: bold;
     color: var(--rojo-torii);
+}
+
+/* Descripcion del producto: texto mas chico y gris, cortado si es muy larga */
+.producto .descripcion {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 8px 0;
+    /* Corto la altura en vez de dejar que el texto largo estire la tarjeta */
+    max-height: 4em;
+    overflow: hidden;
+}
+
+/* Este contenedor empuja los botones (carrito/editar) siempre al fondo de la tarjeta */
+.producto form,
+.producto > a {
+    margin-top: auto;
 }
 
 .producto a {
@@ -246,30 +301,7 @@ footer p {
         flex-direction: column;
         gap: 10px;
     }
-
     header h1 {
         font-size: 1.5rem;
     }
-}
-
-form select,
-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 1rem;
-}
-
-form select:focus,
-form textarea:focus {
-    outline: none;
-    border-color: var(--rojo-torii);
-    box-shadow: 0 0 0 3px var(--rosa-sakura);
-}
-
-form textarea {
-    resize: vertical;
 }

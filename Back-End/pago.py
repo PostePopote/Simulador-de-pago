@@ -1,10 +1,11 @@
 import mercadopago
 
-# Pego aca mi Access Token de PRUEBA, el que empieza con TEST
-sdk = mercadopago.SDK("Borrado por seguridad")
-
+# Conecto el SDK de Mercado Pago con mi Access Token de PRUEBA 
+sdk = mercadopago.SDK("borrado por seguridad")
 
 def crear_preferencia(carrito):
+    # Una preferencia es el "pedido" que le mando a Mercado Pago para que lo cobre
+    # Armo un item por cada producto del carrito, con su nombre, cantidad y precio
     items = []
     for producto in carrito:
         items.append({
@@ -12,7 +13,8 @@ def crear_preferencia(carrito):
             "quantity": producto["cantidad"],
             "unit_price": float(producto["precio"]),
         })
-
+    # Las back_urls son a donde Mercado Pago redirige al usuario
+    # dependiendo de como termino el pago
     datos_preferencia = {
         "items": items,
         "back_urls": {
@@ -21,7 +23,9 @@ def crear_preferencia(carrito):
             "pending": "http://127.0.0.1:5000/pago_pendiente",
         },
     }
-
+    # Le mando los datos a Mercado Pago y me devuelve la preferencia ya creada
     resultado = sdk.preference().create(datos_preferencia)
     preferencia = resultado["response"]
+    # sandbox_init_point es el link al checkout de PRUEBA, sin mover dinero real
+    # (si uso una credencial TEST-, este es el link que tengo que usar)
     return preferencia["sandbox_init_point"]

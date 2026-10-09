@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block titulo %}Registrarme - SakuraShop{% endblock %}
+
+{% block contenido %}
+    <h2>Crear cuenta</h2>
+
+    <form method="POST" action="{{ url_for('register') }}">
+        {{ form.hidden_tag() }}
+
+        <label for="nombre">{{ form.nombre.label }}</label>
+        {{ form.nombre(id="nombre") }}
+        {% for error in form.nombre.errors %}
+            <p class="mensaje error">{{ error }}</p>
+        {% endfor %}
+
+        <label for="gmail">{{ form.gmail.label }}</label>
+        {{ form.gmail(id="gmail") }}
+        {% for error in form.gmail.errors %}
+            <p class="mensaje error">{{ error }}</p>
+        {% endfor %}
+
+        <p>La contraseña debe tener:</p>
+        <p>Como minimo 6 digitos de largo</p>
+        <p>Una mayuscula, letras, numeros y un caracter especial</p>
+        <label for="contraseña"> {{ form.contraseña.label }} </label>
+        {{ form.contraseña(id="contraseña") }}
+        {% for error in form.contraseña.errors %}
+            <p class="mensaje error">{{ error }}</p>
+        {% endfor %}
+
+        <label for="confirmar">{{ form.confirmar.label }}</label>
+        {{ form.confirmar(id="confirmar") }}
+        {% for error in form.confirmar.errors %}
+            <p class="mensaje error">{{ error }}</p>
+        {% endfor %}
+
+        {{ form.enviar() }}
+    </form>
+
+    <p>¿Ya tenes cuenta? <a href="{{ url_for('login') }}">Inicia sesion</a></p>
+{% endblock %}

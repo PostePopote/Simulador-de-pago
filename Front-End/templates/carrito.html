@@ -13,7 +13,6 @@
                     <h3>{{ item.nombre }}</h3>
                     <p>{{ item.categoria }}</p>
                     <p>${{ item.precio }} x {{ item.cantidad }}</p>
-
                     <form method="POST" action="{{ url_for('quitar_del_carrito', id_producto=item.id) }}">
                         <button type="submit">Quitar</button>
                     </form>

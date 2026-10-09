@@ -5,7 +5,7 @@
 {% block contenido %}
     <h2>Productos</h2>
 
-    {# Si la lista viene vacia muestro un aviso #}
+    {# Si la lista viene vacia (sin productos en la base) muestro un aviso #}
     {% if productos %}
         <div class="lista-productos">
             {% for p in productos %}
@@ -14,13 +14,13 @@
                     <h3>{{ p.nombre }}</h3>
                     <p>{{ p.categoria }}</p>
                     <p>${{ p.precio }}</p>
-
-                    {# Todos pueden agregar al carrito #}
+                    {# Uso una clase aparte para la descripcion, asi no choca con el estilo de precio/categoria #}
+                    <p class="descripcion">{{ p.descripcion }}</p>
+                    {# El boton de agregar al carrito lo ve cualquiera, con o sin sesion iniciada #}
                     <form method="POST" action="{{ url_for('agregar_al_carrito', id_producto=p.id) }}">
                         <button type="submit">Agregar al carrito</button>
                     </form>
-
-                    {# Solo el admin ve editar #}
+                    {# Solo el admin ve el link de editar #}
                     {% if session.get('rol') == 'admin' %}
                         <a href="{{ url_for('editar', id_producto=p.id) }}">Editar</a>
                     {% endif %}

@@ -5,31 +5,33 @@
 {% block contenido %}
     <h2>Editar producto</h2>
 
-    <form method="POST" action="{{ url_for('editar', id_producto=producto.id) }}">
+    <form method="POST" action="{{ url_for('editar', id_producto=producto.id) }}" enctype="multipart/form-data">
         <label for="nombre">Nombre</label>
         <input type="text" id="nombre" name="nombre" value="{{ producto.nombre }}" required>
-
         <label for="precio">Precio</label>
         <input type="number" id="precio" name="precio" step="0.01" min="0" value="{{ producto.precio }}" required>
-
         <label for="stock">Stock</label>
         <input type="number" id="stock" name="stock" min="0" value="{{ producto.stock }}" required>
-
         <label for="tipo">Tipo</label>
         <input type="text" id="tipo" name="tipo" value="{{ producto.tipo }}" required>
-
         <label for="categoria">Categoria</label>
         <select id="categoria" name="categoria" required>
             <option value="Musica" {% if producto.categoria == "Musica" %}selected{% endif %}>Musica</option>
             <option value="Japon" {% if producto.categoria == "Japon" %}selected{% endif %}>Japon</option>
+            <option value="Manga" {% if producto.categoria == "Manga" %}selected{% endif %}>Manga</option>
+            <option value="Comic" {% if producto.categoria == "Comic" %}selected{% endif %}>Comic</option>
+            <option value="Figura" {% if producto.categoria == "Figura" %}selected{% endif %}>Figura</option>
+            <option value="CD" {% if producto.categoria == "CD" %}selected{% endif %}>CD</option>
+            <option value="Blu-Ray" {% if producto.categoria == "Blu-Ray" %}selected{% endif %}>Blu-Ray</option>
         </select>
-
-        <label for="imagen">Nombre de la imagen</label>
-        <input type="text" id="imagen" name="imagen" value="{{ producto.imagen }}" required>
-
+        {# Muestro la imagen actual, asi el admin ve cual tiene cargada antes de cambiarla #}
+        <label>Imagen actual</label>
+        <img src="{{ url_for('static', filename=producto.imagen) }}" alt="{{ producto.nombre }}" style="max-width: 150px; display: block; margin-bottom: 15px;">
+        <label for="imagen">Cambiar imagen (opcional)</label>
+        <input type="file" id="imagen" name="imagen" accept="image/*">
         <label for="descripcion">Descripcion</label>
         <textarea id="descripcion" name="descripcion" rows="4">{{ producto.descripcion }}</textarea>
-
         <button type="submit">Guardar cambios</button>
+
     </form>
 {% endblock %}

@@ -1,10 +1,15 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from db import obtener_productos, obtener_producto_por_id, insertar_producto, actualizar_producto, obtener_usuario_por_gmail, insertar_usuario
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from db import (
+    obtener_productos, obtener_producto_por_id, insertar_producto, actualizar_producto,
+    obtener_usuario_por_gmail, obtener_usuario_por_id, insertar_usuario
+)
 from pago import crear_preferencia
 from forms import RegistroForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from models import Usuario
 
 # Le indico a Flask donde estan los templates y static porque si no el tonoto se pierde
 app = Flask(
@@ -13,6 +18,24 @@ app = Flask(
     static_folder="../Front-End/static",
 )
 app.secret_key = "contraseña_secreta_SakuraShop"
+
+# Configuro Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+# Si alguien intenta entrar a una ruta protegida sin estar logueado, lo mando a login
+login_manager.login_view = "login"
+login_manager.login_message = "Tenes que iniciar sesion para acceder a esa pagina"
+login_manager.login_message_category = "error"
+
+
+# Flask-Login llama a esta funcion en cada pedido para saber quien es el usuario actual
+@login_manager.user_loader
+def cargar_usuario(id_usuario):
+    datos_usuario = obtener_usuario_por_id(int(id_usuario))
+    if datos_usuario is None:
+        return None
+    return Usuario(datos_usuario)
+
 
 @app.route("/")
 def home():
@@ -30,14 +53,12 @@ def login():
         gmail = request.form["usuario"]
         password = request.form["password"]
         # Busco el usuario en la base por su gmail
-        usuario = obtener_usuario_por_gmail(gmail)
-        # El "usuario and" es importante: si el gmail no existe, usuario es None,
-        # y Python corta ahi sin llegar a check_password_hash (si no, tiraria error)
-        # check_password_hash encripta el password escrito y lo compara con el hash guardado
-        # (la contraseña real nunca se puede "desencriptar", solo se compara asi)
-        if usuario and check_password_hash(usuario["contraseña"], password):
-            session["usuario"] = usuario["nombre"]
-            session["rol"] = usuario["rol"]
+        datos_usuario = obtener_usuario_por_gmail(gmail)
+
+        if datos_usuario and check_password_hash(datos_usuario["contraseña"], password):
+            # login_user guarda al usuario en la sesion, Flask-Login se encarga de todo
+            usuario = Usuario(datos_usuario)
+            login_user(usuario)
             flash("Sesion iniciada correctamente", "exito")
             return redirect(url_for("home"))
         else:
@@ -46,8 +67,8 @@ def login():
 
 @app.route("/logout")
 def logout():
-    # session.clear() borra todo lo guardado: usuario, rol y tambien el carrito
-    session.clear()
+    # logout_user limpia la sesion del usuario actual
+    logout_user()
     flash("Sesion cerrada", "exito")
     return redirect(url_for("home"))
 
@@ -56,7 +77,9 @@ CARPETA_IMAGENES = os.path.join(app.root_path, "..", "Front-End", "static", "ass
 # Por si la carpeta no existe todavia, la creo
 os.makedirs(CARPETA_IMAGENES, exist_ok=True)
 
+# login_required hace que, si nadie inicio sesion, Flask lo mande solo a /login
 @app.route("/agregar", methods=["GET", "POST"])
+@login_required
 def agregar():
     if request.method == "POST":
         nombre = request.form["nombre"]
@@ -82,6 +105,7 @@ def agregar():
 
 # Edito unicamente aquel producto seleccionado por su id
 @app.route("/editar/<int:id_producto>", methods=["GET", "POST"])
+@login_required
 def editar(id_producto):
     if request.method == "POST":
         nombre = request.form["nombre"]

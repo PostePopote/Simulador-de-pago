@@ -4,7 +4,7 @@ def obtener_conexion():
     conexion = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Loforte_2008",
+        password="Contraseña",
         database="SakuraShop"
     )
     return conexion
@@ -72,6 +72,17 @@ def obtener_usuario_por_gmail(gmail):
     conexion.close()
     return usuario
 
+def obtener_usuario_por_id(id_usuario):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT id_usuario AS id, nombre, gmail, contraseña, rol FROM usuarios WHERE id_usuario = %s",
+        (id_usuario,)
+    )
+    usuario = cursor.fetchone()
+    cursor.close()
+    conexion.close()
+    return usuario
 
 def insertar_usuario(nombre, gmail, contraseña_hasheada):
     conexion = obtener_conexion()

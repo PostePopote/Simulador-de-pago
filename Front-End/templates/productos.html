@@ -21,7 +21,7 @@
                         <button type="submit">Agregar al carrito</button>
                     </form>
                     {# Solo el admin ve el link de editar #}
-                    {% if session.get('rol') == 'admin' %}
+                    {% if current_user.rol == 'admin' %}
                         <a href="{{ url_for('editar', id_producto=p.id) }}">Editar</a>
                     {% endif %}
                 </div>

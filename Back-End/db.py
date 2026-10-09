@@ -4,7 +4,7 @@ def obtener_conexion():
     conexion = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Cambiar contraseña",
+        password="Cambiar Contraseña",
         database="SakuraShop"
     )
     return conexion

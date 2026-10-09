@@ -48,10 +48,15 @@ def obtener_conexion():
     )
     return conexion
 
-En password donde dice cambia contraseña debes poner la contraseña tuya de sql
+En password donde dice cambia contraseña debes poner la contraseña tuya de sql 
+
+Tambien en app.py deberas cambiar lo siguiente
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root:CONTRASEÑA@localhost/SakuraShop"
+donde dice CONTRASEÑA debes cambiarla y poner tu contraseña de sql
 
 Paso 6: Configura el Mercado Pago
-En `Back-End/pago.py`, pegá tu **Access Token de prueba** (el que empieza con `TEST-`), obtenido desde el Panel del Desarrollador de Mercado Pago:
+En `Back-End/pago.py`, pegá tu **Access Token de prueba**, obtenido desde el Panel del Desarrollador de Mercado Pago:
 sdk = mercadopago.SDK("Borrado por seguridad")
 
 Paso 7: Ejecutamos la aplicación

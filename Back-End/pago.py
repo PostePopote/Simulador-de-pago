@@ -1,7 +1,7 @@
 import mercadopago
 
 # Conecto el SDK de Mercado Pago con mi Access Token de PRUEBA 
-sdk = mercadopago.SDK("TEST-borra todo esto menos las "" y pega el access token")
+sdk = mercadopago.SDK("borra todo esto menos las "" y pega el access token")
 
 def crear_preferencia(carrito):
     # Una preferencia es el "pedido" que le mando a Mercado Pago para que lo cobre

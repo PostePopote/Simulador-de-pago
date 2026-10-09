@@ -30,7 +30,7 @@
 
                 {# Unicamente los encargados de la pagina (admins) veran todo este tema #}
                 {% if current_user.rol == 'admin' %}
-                    <a href="#">Panel admin</a>
+                    <p>Panel admin</p>
                 {% endif %}
                 {% if current_user.rol == 'admin' %}
                     <a href="{{ url_for('agregar') }}">Agregar producto</a>

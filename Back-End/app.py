@@ -1,15 +1,11 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from db import (
-    obtener_productos, obtener_producto_por_id, insertar_producto, actualizar_producto,
-    obtener_usuario_por_gmail, obtener_usuario_por_id, insertar_usuario
-)
+from models import db, Usuario, Producto
 from pago import crear_preferencia
 from forms import RegistroForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import Usuario
 
 # Le indico a Flask donde estan los templates y static porque si no el tonoto se pierde
 app = Flask(
@@ -18,24 +14,23 @@ app = Flask(
     static_folder="../Front-End/static",
 )
 app.secret_key = "contraseña_secreta_SakuraShop"
+# Le digo a SQLAlchemy a que base de datos conectarse
+# Cambia "CONTRASEÑA" por tu contraseña real de MySQL
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root:CONTRASEÑA@localhost/SakuraShop"
+# Conecto SQLAlchemy con mi app
+db.init_app(app)
 
 # Configuro Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
-# Si alguien intenta entrar a una ruta protegida sin estar logueado, lo mando a login
 login_manager.login_view = "login"
 login_manager.login_message = "Tenes que iniciar sesion para acceder a esa pagina"
 login_manager.login_message_category = "error"
 
-
-# Flask-Login llama a esta funcion en cada pedido para saber quien es el usuario actual
 @login_manager.user_loader
 def cargar_usuario(id_usuario):
-    datos_usuario = obtener_usuario_por_id(int(id_usuario))
-    if datos_usuario is None:
-        return None
-    return Usuario(datos_usuario)
-
+    # Query.get busca por clave primaria directo, sin escribir SQL
+    return Usuario.query.get(int(id_usuario))
 
 @app.route("/")
 def home():
@@ -43,8 +38,8 @@ def home():
 
 @app.route("/productos")
 def productos():
-    # Ahora los productos vienen de MySQL
-    lista_productos = obtener_productos()
+    # Query.all() trae todos los productos, como objetos Producto
+    lista_productos = Producto.query.all()
     return render_template("productos.html", productos=lista_productos)
 
 @app.route("/login", methods=["GET", "POST"])
@@ -52,12 +47,9 @@ def login():
     if request.method == "POST":
         gmail = request.form["usuario"]
         password = request.form["password"]
-        # Busco el usuario en la base por su gmail
-        datos_usuario = obtener_usuario_por_gmail(gmail)
-
-        if datos_usuario and check_password_hash(datos_usuario["contraseña"], password):
-            # login_user guarda al usuario en la sesion, Flask-Login se encarga de todo
-            usuario = Usuario(datos_usuario)
+        # filter_by busca donde gmail sea igual al que escribio el usuario
+        usuario = Usuario.query.filter_by(gmail=gmail).first()
+        if usuario and check_password_hash(usuario.contraseña, password):
             login_user(usuario)
             flash("Sesion iniciada correctamente", "exito")
             return redirect(url_for("home"))
@@ -67,116 +59,106 @@ def login():
 
 @app.route("/logout")
 def logout():
-    # logout_user limpia la sesion del usuario actual
     logout_user()
     flash("Sesion cerrada", "exito")
     return redirect(url_for("home"))
 
 # Ruta absoluta a static/assets, construida a partir de donde esta este archivo (app.py)
 CARPETA_IMAGENES = os.path.join(app.root_path, "..", "Front-End", "static", "assets")
-# Por si la carpeta no existe todavia, la creo
 os.makedirs(CARPETA_IMAGENES, exist_ok=True)
 
-# login_required hace que, si nadie inicio sesion, Flask lo mande solo a /login
 @app.route("/agregar", methods=["GET", "POST"])
 @login_required
 def agregar():
     if request.method == "POST":
-        nombre = request.form["nombre"]
-        precio = request.form["precio"]
-        stock = request.form["stock"]
-        tipo = request.form["tipo"]
-        categoria = request.form["categoria"]
-        descripcion = request.form["descripcion"]
-        # El archivo subido viene de request.files, no de request.form
         archivo_imagen = request.files["imagen"]
-        # secure_filename limpia el nombre del archivo, por si tiene espacios o caracteres raros
         nombre_archivo = secure_filename(archivo_imagen.filename)
-        # Lo guardo fisicamente en static/assets
         ruta_guardado = os.path.join(CARPETA_IMAGENES, nombre_archivo)
         archivo_imagen.save(ruta_guardado)
-        # En la base solo guardo la ruta relativa, como ya veniamos haciendo
-        imagen = f"assets/{nombre_archivo}"
-        insertar_producto(nombre, precio, stock, tipo, categoria, imagen, descripcion)
+        # Armo el objeto Producto con los datos del formulario
+        nuevo_producto = Producto(
+            nombre=request.form["nombre"],
+            precio=request.form["precio"],
+            stock=request.form["stock"],
+            tipo=request.form["tipo"],
+            categoria=request.form["categoria"],
+            imagen=f"assets/{nombre_archivo}",
+            descripcion=request.form["descripcion"],
+        )
+        # Lo agrego a la sesion de SQLAlchemy y confirmo con commit, como el commit() de antes
+        db.session.add(nuevo_producto)
+        db.session.commit()
         flash("Producto agregado correctamente", "exito")
         return redirect(url_for("productos"))
-
     return render_template("agregar.html")
 
-# Edito unicamente aquel producto seleccionado por su id
 @app.route("/editar/<int:id_producto>", methods=["GET", "POST"])
 @login_required
 def editar(id_producto):
+    producto = Producto.query.get(id_producto)
     if request.method == "POST":
-        nombre = request.form["nombre"]
-        precio = request.form["precio"]
-        stock = request.form["stock"]
-        tipo = request.form["tipo"]
-        categoria = request.form["categoria"]
-        descripcion = request.form["descripcion"]
-        # Traigo el producto actual para saber que imagen tenia, por si no suben una nueva
-        producto_actual = obtener_producto_por_id(id_producto)
-        imagen = producto_actual["imagen"]
-        # Si el input de archivo viene con algo cargado, piso la imagen vieja
+        producto.nombre = request.form["nombre"]
+        producto.precio = request.form["precio"]
+        producto.stock = request.form["stock"]
+        producto.tipo = request.form["tipo"]
+        producto.categoria = request.form["categoria"]
+        producto.descripcion = request.form["descripcion"]
         archivo_imagen = request.files["imagen"]
         if archivo_imagen.filename != "":
             nombre_archivo = secure_filename(archivo_imagen.filename)
             ruta_guardado = os.path.join(CARPETA_IMAGENES, nombre_archivo)
             archivo_imagen.save(ruta_guardado)
-            imagen = f"assets/{nombre_archivo}"
-        actualizar_producto(id_producto, nombre, precio, stock, tipo, categoria, imagen, descripcion)
+            producto.imagen = f"assets/{nombre_archivo}"
+        # No hace falta "actualizar" nada: como el objeto ya viene de la base,
+        # SQLAlchemy nota los cambios solo y los guarda con este commit
+        db.session.commit()
         flash("Producto actualizado correctamente", "exito")
         return redirect(url_for("productos"))
-    producto = obtener_producto_por_id(id_producto)
     return render_template("editar.html", producto=producto)
 
 # Todo esto es del carro
 @app.route("/carrito")
 def carrito():
-    # session.get("carrito", []) trae el carrito guardado, o una lista vacia si no hay nada todavia
     lista_carrito = session.get("carrito", [])
-    # Multiplico precio por cantidad en cada producto, y sumo todo
     total = sum(item["precio"] * item["cantidad"] for item in lista_carrito)
     return render_template("carrito.html", carrito=lista_carrito, total=total)
 
-# Agrego el producto al carrito, o le sumo 1 a la cantidad si ya estaba
 @app.route("/carrito/agregar/<int:id_producto>", methods=["POST"])
 def agregar_al_carrito(id_producto):
     carrito = session.get("carrito", [])
-    # Recorro el carrito a ver si el producto ya esta cargado
     ya_esta = False
     for item in carrito:
         if item["id"] == id_producto:
             item["cantidad"] = item["cantidad"] + 1
             ya_esta = True
-            break  # Ya lo encontre, no hace falta seguir recorriendo
-    # Si no estaba en el carrito, lo busco en la base y lo agrego como nuevo con cantidad 1
+            break
     if not ya_esta:
-        producto = obtener_producto_por_id(id_producto)
-        # Convierto el precio a float porque el Decimal de MySQL no se guarda bien en la sesion
-        producto["precio"] = float(producto["precio"])
-        producto["cantidad"] = 1
-        carrito.append(producto)
-    # Piso el carrito viejo de la sesion con el actualizado
+        producto = Producto.query.get(id_producto)
+        # La session de Flask guarda la cookie como JSON, y un objeto Producto no se puede
+        # convertir a JSON directo, por eso armo un diccionario a mano con lo que necesito
+        producto_para_carrito = {
+            "id": producto.id,
+            "nombre": producto.nombre,
+            "precio": float(producto.precio),
+            "imagen": producto.imagen,
+            "categoria": producto.categoria,
+            "cantidad": 1,
+        }
+        carrito.append(producto_para_carrito)
     session["carrito"] = carrito
     flash("Producto agregado al carrito", "exito")
     return redirect(url_for("productos"))
 
-
-# Le resto 1 a la cantidad, y si llega a 0 lo saco del carrito
 @app.route("/carrito/quitar/<int:id_producto>", methods=["POST"])
 def quitar_del_carrito(id_producto):
     carrito = session.get("carrito", [])
-    # Armo un carrito nuevo en vez de modificar el viejo mientras lo recorro
     nuevo_carrito = []
     for item in carrito:
         if item["id"] == id_producto:
             item["cantidad"] = item["cantidad"] - 1
             if item["cantidad"] > 0:
                 nuevo_carrito.append(item)
-            # Si la cantidad llega a 0, no lo agrego de vuelta (queda eliminado)
         else:
-            # Es otro producto, lo dejo como estaba
             nuevo_carrito.append(item)
     session["carrito"] = nuevo_carrito
     flash("Producto quitado del carrito", "exito")
@@ -186,18 +168,14 @@ def quitar_del_carrito(id_producto):
 @app.route("/pagar", methods=["POST"])
 def pagar():
     carrito = session.get("carrito", [])
-
     if not carrito:
         flash("Tu carrito esta vacio", "error")
         return redirect(url_for("carrito"))
-    # crear_preferencia le manda el carrito a Mercado Pago y devuelve el link del checkout
     link_pago = crear_preferencia(carrito)
-    # redirect manda al usuario afuera de mi pagina, directo al checkout de Mercado Pago
     return redirect(link_pago)
 
 @app.route("/pago_exitoso")
 def pago_exitoso():
-    # Vacio el carrito porque la compra ya se completo
     session["carrito"] = []
     flash("Pago realizado correctamente", "exito")
     return redirect(url_for("carrito"))
@@ -214,28 +192,23 @@ def pago_pendiente():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    # FlaskForm necesita crear una instancia del formulario para validarlo y mostrarlo
     form = RegistroForm()
-    # validate_on_submit() revisa dos cosas a la vez: que sea un POST,
-    # y que todos los validadores del formulario (DataRequired, Email, etc) pasen
     if form.validate_on_submit():
-        nombre = form.nombre.data
-        gmail = form.gmail.data
-        contraseña = form.contraseña.data
-        # Me fijo que no exista ya un usuario con ese gmail
-        usuario_existente = obtener_usuario_por_gmail(gmail)
+        usuario_existente = Usuario.query.filter_by(gmail=form.gmail.data).first()
         if usuario_existente:
             flash("Ya existe una cuenta con ese gmail", "error")
             return redirect(url_for("register"))
-        # Encripto la contraseña antes de guardarla, nunca en texto plano
-        contraseña_hasheada = generate_password_hash(contraseña)
-        insertar_usuario(nombre, gmail, contraseña_hasheada)
+        nuevo_usuario = Usuario(
+            nombre=form.nombre.data,
+            gmail=form.gmail.data,
+            contraseña=generate_password_hash(form.contraseña.data),
+            rol="usuario",
+        )
+        db.session.add(nuevo_usuario)
+        db.session.commit()
         flash("Cuenta creada correctamente, ya podes iniciar sesion", "exito")
         return redirect(url_for("login"))
-    # Si no se envio el formulario, o si algun campo no paso la validacion,
-    # vuelvo a mostrar register.html (con los errores marcados si los hay)
     return render_template("register.html", form=form)
 
-# Le da la chispa de inicio para que arranque la app
 if __name__ == "__main__":
     app.run(debug=True)
